@@ -1,0 +1,98 @@
+# C++ .gitignore file with MSE additions
+# https://github.com/github/gitignore/blob/master/C%2B%2B.gitignore
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.ex
+*.x
+
+# TeX intermediates
+*.aux
+*.synctex.gz
+*.nav
+*.snm
+*.toc
+
+# Python cache
+*.pyc
+*/__pycache__/
+
+# Simulation outputs
+**/chk?????
+**/plt?????
+**/reactchk?????
+**/reactplt?????
+
+# Simulation outputs
+**/chk?????.old*/**
+**/plt?????.old*/**
+**/reactchk?????.old*/**
+**/reactplt?????.old*/**
+
+# OpenGL executable
+opengl_configs/opengl
+
+# Images of various types
+*.png
+*.ps
+*.ppm
+
+# Data files
+*.csv
+*.csv.[0-9]*
+*.npy
+*.dat
+
+# Log files for big simulation runs
+*.log
+
+# Build intermediates
+hypre/src/config/config.log
+hypre/src/config/Makefile.config
+amrex/tmp_build_dir
+rincflo/build2d/tmp_build_dir/**
+rincflo/build3d/tmp_build_dir/**
+
+# VS Code config
+.vscode/*
+
+# mpi hostfiles
+**/hostfile
+
+# The scratch directory
+scratch
+
+# Windows NFS mount crud
+**/Thumbs.db
+**/Thumbs.db:encryptable
+

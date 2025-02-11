@@ -1,0 +1,11 @@
+CEXE_sources += rincflo_rheology.cpp
+CEXE_sources += rincflo_read_rheology_parameters.cpp
+CEXE_sources += rincflo_compute_dt.cpp
+CEXE_sources += rincflo_compute_forces.cpp
+CEXE_sources += rincflo_apply_predictor.cpp
+CEXE_sources += rincflo_apply_corrector.cpp
+CEXE_sources += rincflo_apply_nodal_projection.cpp
+CEXE_sources += rincflo_tagging.cpp
+CEXE_sources += rincflo_regrid.cpp
+CEXE_sources += rincflo_advance.cpp
+CEXE_sources += rincflo_steady_state.cpp

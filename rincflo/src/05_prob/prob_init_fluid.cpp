@@ -1,0 +1,824 @@
+#include <rincflo.H>
+
+using namespace amrex;
+static constexpr Real pi = std::numbers::pi;
+static constexpr Real twopi = 2.0 * pi;
+
+void Rincflo::ProblemInitFluid (int lev)
+{
+    #define FUNC_NAME "Rincflo::MakeNewLevelFromScratch"
+    BL_PROFILE(FUNC_NAME);
+    DEBUG_FUNC_ENTRY(FUNC_NAME);
+
+    // DEBUG
+    // Print() << format("*****Entering Rincflo::ProblemInitFluid({:d}).\n", lev);
+    
+    auto& ld = *m_leveldata[lev];
+    Box const& domain = geom[lev].Domain();
+    auto const& dx = geom[lev].CellSizeArray();
+    auto const& problo = geom[lev].ProbLoArray();
+    auto const& probhi = geom[lev].ProbHiArray();
+
+    // Initialize pressure, gradp and density with constant pressure and density, zero gradp)
+    ld.pressure.setVal(m_ic_p);
+    ld.gradp.setVal(0.0);
+    ld.density.setVal(m_ro_0);
+    ld.density_o.setVal(m_ro_0);
+    
+    // Initialize velocity and conc with input constants
+    AMREX_D_TERM(
+    ld.velocity.setVal(m_ic_u, 0, 1);,
+    ld.velocity.setVal(m_ic_v, 1, 1);,
+    ld.velocity.setVal(m_ic_w, 2, 1);)
+
+    for(int i=0; i<m_nspec; i++)
+        {ld.conc.setVal(m_ic_t[i], i, 1);}
+
+    // Initialize potential to zero - only if this is a reaction model
+    if (is_Reaction())
+    {
+        ld.epotL.setVal(0.0);
+        ld.epotS.setVal(0.0);
+    }
+
+    if (10 == m_probtype)      
+        {init_flow_from_file();}
+    else 
+    {
+        for (MFIter mfi(ld.density); mfi.isValid(); ++mfi)
+        {
+            const Box& vbx = mfi.validbox();
+            const Box& gbx = mfi.fabbox();
+            if (0 == m_probtype) {}
+            else if (1 == m_probtype)
+            {
+                ProblemInit_taylor_green(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else if (2 == m_probtype)
+            {
+                ProblemInit_taylor_vortex(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else if (3 == m_probtype)
+            {
+                ProblemInit_taylor_green3d(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else if (4 == m_probtype)
+            {
+                ProblemInit_couette(vbx, gbx,
+                    ld.pressure.array(mfi),
+                    ld.velocity.array(mfi),
+                    ld.density.array(mfi),
+                    ld.conc.array(mfi),
+                    domain, dx, problo, probhi);
+            }
+            else if (5 == m_probtype)
+            {
+                ProblemInit_rayleigh_taylor(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else if (6 == m_probtype)
+            {   
+                ProblemInit_channel_slant(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else if (11 == m_probtype)
+            {
+                ProblemInit_tuscan(vbx, gbx,
+                    ld.pressure.array(mfi),
+                    ld.velocity.array(mfi),
+                    ld.density.array(mfi),
+                    ld.conc.array(mfi),
+                    domain, dx, problo, probhi);
+            }
+            else if (111 == m_probtype || 112 == m_probtype || 113 == m_probtype)
+            {
+                ProblemInit_boussinesq_bubble(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else if (12 == m_probtype)
+            {
+                ProblemInit_periodic_conc(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else if (21 == m_probtype || 22 == m_probtype || 23 == m_probtype)
+            {
+                ProblemInit_double_shear_layer(vbx, gbx,
+                            ld.pressure.array(mfi),
+                            ld.velocity.array(mfi),
+                            ld.density.array(mfi),
+                            ld.conc.array(mfi),
+                            domain, dx, problo, probhi);
+            }
+            else if (31  == m_probtype || 32 == m_probtype || 33 == m_probtype || 
+                    311 == m_probtype || 322 == m_probtype || 333 == m_probtype || 41  == m_probtype)
+            {
+                ProblemInit_plane_poiseuille(vbx, gbx,
+                        ld.pressure.array(mfi),
+                        ld.velocity.array(mfi),
+                        ld.density.array(mfi),
+                        ld.conc.array(mfi),
+                        domain, dx, problo, probhi);
+            }
+            else
+            {
+                Abort("ProblemInitFluid: unknown m_probtype");
+            };
+        }
+    }
+    DEBUG_FUNC_EXIT(FUNC_NAME);
+    #undef FUNC_NAME
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_taylor_green (Box const& vbx, Box const& gbx,
+                 Array4<Real> const& pressure,
+                 Array4<Real> const& vel,
+                 Array4<Real> const& density,
+                 Array4<Real> const& conc,
+                 Box const& domain,
+                 GpuArray<Real, SpaceDim> const& dx,
+                 GpuArray<Real, SpaceDim> const& problo,
+                 GpuArray<Real, SpaceDim> const& probhi)
+{
+    auto func =
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        Real x = (i+0.5)*dx[0];
+        Real y = (j+0.5)*dx[1];
+        AMREX_D_TERM(
+        vel(i,j,k,0) =  std::sin(twopi*x) * std::cos(twopi*y);,
+        vel(i,j,k,1) = -std::cos(twopi*x) * std::sin(twopi*y);,
+        vel(i,j,k,2) = 0.0;)
+    };
+    ParallelFor(vbx, func);
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_taylor_green3d (Box const& vbx, Box const& gbx,
+                   Array4<Real> const& pressure,
+                   Array4<Real> const& vel,
+                   Array4<Real> const& density,
+                   Array4<Real> const& conc,
+                   Box const& domain,
+                   GpuArray<Real, SpaceDim> const& dx,
+                   GpuArray<Real, SpaceDim> const& problo,
+                   GpuArray<Real, SpaceDim> const& probhi)
+{
+    auto func = 
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        Real x = (i+0.5)*dx[0];
+        Real y = (j+0.5)*dx[1];
+        Real z = (k+0.5)*dx[2];
+        AMREX_D_TERM(
+        vel(i,j,k,0) =  std::sin(twopi*x) * std::cos(twopi*y) * std::cos(twopi*z);,
+        vel(i,j,k,1) = -std::cos(twopi*x) * std::sin(twopi*y) * std::cos(twopi*z);,
+        vel(i,j,k,2) = 0.0;)
+    };
+    ParallelFor(vbx, func);
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_taylor_vortex (Box const& vbx, Box const& gbx,
+                  Array4<Real> const& pressure,
+                  Array4<Real> const& vel,
+                  Array4<Real> const& density,
+                  Array4<Real> const& conc,
+                  Box const& domain,
+                  GpuArray<Real, SpaceDim> const& dx,
+                  GpuArray<Real, SpaceDim> const& problo,
+                  GpuArray<Real, SpaceDim> const& probhi)
+{
+    auto func =
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        Real x = (i+0.5)*dx[0];
+        Real y = (j+0.5)*dx[1];
+        constexpr Real u0 = 1.0;
+        constexpr Real v0 = 1.0;
+        AMREX_D_TERM(
+        vel(i,j,k,0) =  u0 - std::cos(pi*x) * std::sin(pi*y);,
+        vel(i,j,k,1) =  v0 + std::sin(pi*x) * std::cos(pi*y);,
+        vel(i,j,k,2) = 0.0;)
+    };
+    ParallelFor(vbx, func);
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_couette (
+    Box const& vbx, Box const& gbx,
+    Array4<Real> const& pressure,
+    Array4<Real> const& vel,
+    Array4<Real> const& density,
+    Array4<Real> const& conc,
+    Box const& domain,
+    GpuArray<Real, SpaceDim> const& dx,
+    GpuArray<Real, SpaceDim> const& problo,
+    GpuArray<Real, SpaceDim> const& probhi)
+{
+    Real num_cells_y = static_cast<Real>(domain.length(1));
+    auto func = 
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        Real y = (j+0.5) / num_cells_y;
+        AMREX_D_TERM(
+        vel(i,j,k,0) *= (y-0.5);,
+        vel(i,j,k,1) = 0.0;,
+        vel(i,j,k,2) = 0.0;)
+    };
+    ParallelFor(vbx, func);
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_channel_slant (
+    Box const& vbx, Box const& gbx,
+    Array4<Real> const& pressure,
+    Array4<Real> const& vel,
+    Array4<Real> const& density,
+    Array4<Real> const& conc,
+    Box const& domain,
+    GpuArray<Real, SpaceDim> const& dx,
+    GpuArray<Real, SpaceDim> const& problo,
+    GpuArray<Real, SpaceDim> const& probhi)
+{
+    const auto dhi = amrex::ubound(domain);
+    Real num_cells_y = static_cast<Real>(domain.length(1));
+    Real rotation  = 0;
+    Real radius    = 0;
+    // Get cylinder information from inputs file.                               *
+    ParmParse pp("cylinder");
+    pp.query("rotation",   rotation);
+    rotation = (rotation/180.) * M_PI;
+    Real u = m_ic_u;
+    auto func = 
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {   
+        if (rotation > 0 and density(i,j,k)>0)
+        {
+            AMREX_D_TERM(
+            vel(i,j,k,0) = u*std::cos(rotation);,
+            vel(i,j,k,1) = u*std::sin(rotation);,
+            vel(i,j,k,2) = 0.0;)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and i <= dhi.x/8)
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and i <= dhi.x/2)
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and i <= dhi.x*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        }
+    };
+    ParallelFor(vbx, func);
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_rayleigh_taylor (Box const& vbx, Box const& gbx,
+                    Array4<Real> const& pressure,
+                    Array4<Real> const& vel,
+                    Array4<Real> const& density,
+                    Array4<Real> const& conc,
+                    Box const& domain,
+                    GpuArray<Real, SpaceDim> const& dx,
+                    GpuArray<Real, SpaceDim> const& problo,
+                    GpuArray<Real, SpaceDim> const& probhi)
+{
+    static constexpr Real half = 0.5;
+    static constexpr Real rho_1 = 0.5;
+    static constexpr Real rho_2 = 2.0;
+    static constexpr Real conc_1 = 0.0;
+    static constexpr Real conc_2 = 1.0;
+    static constexpr Real width = 0.005;
+
+    const Real splitx = 0.5*(problo[0] + probhi[0]);
+    const Real splity = 0.5*(problo[1] + probhi[1]);
+    const Real L_x    = probhi[0] - problo[0];
+
+    #if (AMREX_IS_2D)
+    auto func =
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        vel(i,j,k,0) = 0.0;
+        vel(i,j,k,1) = 0.0;
+        Real x = problo[0] + (i+0.5)*dx[0];
+        Real y = problo[1] + (j+0.5)*dx[1];
+
+        const Real r2d = min(std::abs(x-splitx), 0.5*L_x);
+        const Real pertheight = 0.5 - 0.01*std::cos(2.0*pi*r2d/L_x);
+
+        density(i,j,k) = rho_1 + ((rho_2-rho_1)/2.0)*(1.0+std::tanh((y-pertheight)/width));
+        conc(i,j,k)  = conc_1 + ((conc_2-conc_1)/2.0)*(1.0+std::tanh((y-pertheight)/width));
+    };
+    ParallelFor(vbx, func);
+    #else
+    auto func = 
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        vel(i,j,k,0) = 0.0;
+        vel(i,j,k,1) = 0.0;
+        vel(i,j,k,2) = 0.0;
+
+        Real x = problo[0] + (i+0.5)*dx[0];
+        Real y = problo[1] + (j+0.5)*dx[1];
+        Real z = problo[2] + (k+0.5)*dx[2];
+
+        const Real r2d = min(std::hypot((x-splitx),(y-splity)), half*L_x);
+        const Real pertheight = 0.5 - 0.01*std::cos(2.0*pi*r2d/L_x);
+
+        density(i,j,k) = rho_1 + ((rho_2-rho_1)/2.0)*(1.0+std::tanh((z-pertheight)/width));
+        conc(i,j,k)  = conc_1 + ((conc_2-conc_1)/2.0)*(1.0+std::tanh((z-pertheight)/width));
+    };
+    ParallelFor(vbx, func);
+    #endif
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_tuscan (Box const& vbx, Box const& gbx,
+               Array4<Real> const& pressure,
+               Array4<Real> const& vel,
+               Array4<Real> const& density,
+               Array4<Real> const& conc,
+               Box const& domain,
+               GpuArray<Real, SpaceDim> const& dx,
+               GpuArray<Real, SpaceDim> const& problo,
+               GpuArray<Real, SpaceDim> const& probhi)
+{
+    int half_num_cells = domain.length(2) / 2;
+    auto func = 
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        AMREX_D_TERM(
+        vel(i,j,k,0) = 0.0;,
+        vel(i,j,k,1) = 0.0;,
+        vel(i,j,k,2) = 0.0;)
+        density(i,j,k) = 1.0;
+        if (k <= half_num_cells) 
+            {conc(i,j,k) = 0.0;} 
+        else 
+            {conc(i,j,k) = 0.01;}
+    };
+    ParallelFor(vbx, func);
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_boussinesq_bubble (
+    Box const& vbx, Box const& gbx,
+    Array4<Real> const& pressure,
+    Array4<Real> const& vel,
+    Array4<Real> const& density,
+    Array4<Real> const& conc,
+    Box const& domain,
+    GpuArray<Real, SpaceDim> const& dx,
+    GpuArray<Real, SpaceDim> const& problo,
+    GpuArray<Real, SpaceDim> const& probhi)
+{
+    if (111 == m_probtype)
+    {
+        auto func =
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 0.0;,
+            vel(i,j,k,1) = 0.0;,
+            vel(i,j,k,2) = 0.0;)
+            density(i,j,k) = 1.0;
+
+            AMREX_D_TERM(
+            Real x = (i+0.5)*dx[0];,
+            Real y = (j+0.5)*dx[1];,
+            Real z = (k+0.5)*dx[2];)
+            // #if (AMREX_IS_2D)
+            // Real r = std::sqrt((x-0.25)*(x-0.25) + (y-0.5)*(y-0.5));
+            // #else
+            // Real r = std::sqrt((x-0.5 )*(x-0.5 ) + (y-0.25)*(y-0.25) + (z-0.25)*(z-0.25));
+            // #endif
+            Real r = std::sqrt(AMREX_D_TERM(
+                  (x-0.5 )*(x-0.5 ), 
+                + (y-0.25)*(y-0.25), 
+                + (z-0.25)*(z-0.25)));
+            if (r < .1)
+                {conc(i,j,k,0) = 0.0;}
+            else
+                {conc(i,j,k,0) = 0.01;}
+        };
+        ParallelFor(vbx, func);
+    } 
+    #if (AMREX_IS_3D)
+    else if (112 == m_probtype) 
+    {
+        auto func =
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            vel(i,j,k,0) = 0.0;
+            vel(i,j,k,1) = 0.0;
+            vel(i,j,k,2) = 0.0;
+            density(i,j,k) = 1.0;
+
+            Real x = (i+0.5)*dx[0];
+            Real y = (j+0.5)*dx[1];
+            Real z = (k+0.5)*dx[2];
+
+            Real r = std::sqrt((x-0.25)*(x-0.25) + (y-0.5 )*(y-0.5 ) + (z-0.25)*(z-0.25));
+
+            if(r < .1)
+               {conc(i,j,k,0) = 0.0;}
+            else
+               {conc(i,j,k,0) = 0.01;}
+        };
+        ParallelFor(vbx, func);
+    } 
+    else if (113 == m_probtype) 
+    {
+        auto func =
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            vel(i,j,k,0) = 0.0;
+            vel(i,j,k,1) = 0.0;
+            vel(i,j,k,2) = 0.0;
+            density(i,j,k) = 1.0;
+
+            Real x = (i+0.5)*dx[0];
+            Real y = (j+0.5)*dx[1];
+            Real z = (k+0.5)*dx[2];
+
+            Real r = std::sqrt((x-0.25)*(x-0.25) + (y-0.25)*(y-0.25) + (z-0.5 )*(z-0.5 ));
+
+            if(r < .1)
+               {conc(i,j,k,0) = 0.0;}
+            else
+               {conc(i,j,k,0) = 0.01;}
+        };
+        ParallelFor(vbx, func);
+    }
+    #endif
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_periodic_conc (Box const& vbx, Box const& gbx,
+                    Array4<Real> const& pressure,
+                    Array4<Real> const& vel,
+                    Array4<Real> const& density,
+                    Array4<Real> const& conc,
+                    Box const& domain,
+                    GpuArray<Real, SpaceDim> const& dx,
+                    GpuArray<Real, SpaceDim> const& problo,
+                    GpuArray<Real, SpaceDim> const& probhi)
+{
+    Real L = probhi[0]-problo[0];
+    Real C = twopi / L;
+    auto func =
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+        constexpr Real A = 1.0;
+        Real x = (i+0.5)*dx[0];
+        Real y = (j+0.5)*dx[1];
+        Real z = (k+0.5)*dx[2];
+        vel(i,j,k,0) = 1.0;
+        vel(i,j,k,1) = 0.1*(std::sin(C*(x+z) - 0.00042) + 1.0) * std::exp(y);
+        vel(i,j,k,2) = 0.1*(std::sin(C*(x+y) - 0.00042) + 1.0) * std::exp(z);
+        conc(i,j,k) = A *(std::sin(C*(y+z) - 0.00042) + 1.0) * std::exp(x);
+    };
+    ParallelFor(vbx, func);
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_double_shear_layer (Box const& vbx, Box const& gbx,
+                       Array4<Real> const& pressure,
+                       Array4<Real> const& vel,
+                       Array4<Real> const& density,
+                       Array4<Real> const& conc,
+                       Box const& domain,
+                       GpuArray<Real, SpaceDim> const& dx,
+                       GpuArray<Real, SpaceDim> const& problo,
+                       GpuArray<Real, SpaceDim> const& probhi)
+{
+    if (21 == m_probtype)
+    {
+        auto func =
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real x = (i+0.5) * dx[0];
+            Real y = (j+0.5) * dx[1];
+            AMREX_D_TERM(
+            vel(i,j,k,0) = std::tanh(30.0*(0.25-amrex::Math::abs(y-0.5)));,
+            vel(i,j,k,1) = 0.05*std::sin(twopi*x);,
+            vel(i,j,k,2) = 0.0;)
+            Real r = std::sqrt((x-0.5)*(x-0.5) + (y-0.25)*(y-0.25));
+            if (r < .1)
+                {conc(i,j,k,0) = 0.0;}
+            else
+                {conc(i,j,k,0) = 0.01;}
+        };
+        ParallelFor(vbx, func);
+    }
+    #if (AMREX_IS_3D)
+    else if (22 == m_probtype)
+    {
+        auto func =
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real y = (j+0.5) * dx[1];
+            Real z = (k+0.5) * dx[2];
+            vel(i,j,k,1) = std::tanh(30.0*(0.25-amrex::Math::abs(z-0.5)));
+            vel(i,j,k,2) = 0.05*std::sin(twopi*y);
+            vel(i,j,k,0) = 0.0;
+
+            Real r = std::sqrt((y-0.5)*(y-0.5) + (z-0.5)*(z-0.5));
+            if (r < .1)
+                {conc(i,j,k,0) = 0.0;}
+            else
+                {conc(i,j,k,0) = 0.01;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else if (23 == m_probtype)
+    {
+        auto func =
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real x = (i+0.5) * dx[0];
+            Real z = (k+0.5) * dx[2];
+            vel(i,j,k,2) = std::tanh(30.0*(0.25-amrex::Math::abs(x-0.5)));
+            vel(i,j,k,0) = 0.05*std::sin(twopi*z);
+            vel(i,j,k,1) = 0.0;
+
+            Real r = std::sqrt((x-0.5)*(x-0.5) + (z-0.5)*(z-0.5));
+            if (r < .1)
+                {conc(i,j,k,0) = 0.0;}
+            else
+                {conc(i,j,k,0) = 0.01;}
+        };
+        ParallelFor(vbx, func);
+    }
+    #endif
+    else
+        {Abort("Unknown double shear layer m_probtype");};
+}
+
+// *********************************************************************************************************************
+void Rincflo::ProblemInit_plane_poiseuille (
+    Box const& vbx, Box const& gbx,
+    Array4<Real> const& pressure,
+    Array4<Real> const& vel,
+    Array4<Real> const& density,
+    Array4<Real> const& conc,
+    Box const& domain,
+    GpuArray<Real, SpaceDim> const& dx,
+    GpuArray<Real, SpaceDim> const& problo,
+    GpuArray<Real, SpaceDim> const& probhi)
+{
+    Real dxinv = 1.0 / domain.length(0);
+    Real dyinv = 1.0 / domain.length(1);
+    Real dzinv = AMREX_D_PICK(0.0, 0.0, 1.0 / domain.length(2));
+    const auto dlo = amrex::lbound(domain);
+    const auto dhi = amrex::ubound(domain);
+
+    if (31 == m_probtype)
+    {
+        Real u = m_ic_u;
+        auto func = 
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real y = (j+0.5)*dyinv;
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 6. * u * y * (1.-y);,
+            vel(i,j,k,1) = 0.0;,
+            vel(i,j,k,2) = 0.0;)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and i <= dhi.x/8)   
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and i <= dhi.x/2)
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and i <= dhi.x*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else if (311 == m_probtype)
+    {
+        Real u = m_ic_u;
+        auto func = 
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real z = (k+0.5)*dzinv;
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 6. * u * z * (1.-z);,
+            vel(i,j,k,1) = 0.0;,
+            vel(i,j,k,2) = 0.0;)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and i <= dhi.x/8)   
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and i <= dhi.x/2)   
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and i <= dhi.x*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else if (41 == m_probtype)
+    {
+        Real u = m_ic_u;
+        auto func = 
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real z = (k+0.5)*dzinv;
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 0.5*z;,
+            vel(i,j,k,1) = 0.0;,
+            vel(i,j,k,2) = 0.0;)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and i <= dhi.x/8)   
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and i <= dhi.x/2)   
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and i <= dhi.x*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else if (32 == m_probtype)
+    {
+        Real v = m_ic_v;
+        auto func = 
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real z = (k+0.5)*dzinv;
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 0.0;,
+            vel(i,j,k,1) = 6. * v * z * (1.-z);,
+            vel(i,j,k,2) = 0.0;)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and j <= dhi.y/8)   
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and j <= dhi.y/2)   
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and j <= dhi.y*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else if (322 == m_probtype)
+    {
+        Real v = m_ic_v;
+        auto func = 
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real x = (i+0.5)*dxinv;
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 0.0;,
+            vel(i,j,k,1) = 6. * v * x * (1.-x);,
+            vel(i,j,k,2) = 0.0;)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and j <= dhi.y/8)   
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and j <= dhi.y/2)   
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and j <= dhi.y*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else if (33 == m_probtype)
+    {
+        Real w = m_ic_w;
+        auto func = 
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real x = (i+0.5)*dxinv;
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 0.0;,
+            vel(i,j,k,1) = 0.0;,
+            vel(i,j,k,2) = 6. * w * x * (1.-x);)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and k <= dhi.z/8)   
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and k <= dhi.z/2)   
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and k <= dhi.z*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else if (333 == m_probtype)
+    {
+        Real w = m_ic_w;
+        auto func = 
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real y = (j+0.5)*dyinv;
+            AMREX_D_TERM(
+            vel(i,j,k,0) = 0.0;,
+            vel(i,j,k,1) = 0.0;,
+            vel(i,j,k,2) = 6. * w * y * (1.-y);)
+            const int nt = conc.nComp();
+            for (int n = 0; n < nt; ++n) 
+                {conc(i,j,k,n) = 0.0;}
+            if (nt > 0 and k <= dhi.z/8)   
+                {conc(i,j,k,0) = 1.0;}
+            if (nt > 1 and k <= dhi.z/2)   
+                {conc(i,j,k,1) = 2.0;}
+            if (nt > 2 and k <= dhi.z*3/4) 
+                {conc(i,j,k,2) = 3.0;}
+        };
+        ParallelFor(vbx, func);
+    }
+    else
+        {Abort("Unknown plane poiseuille m_probtype");};
+}
+
+// *********************************************************************************************************************
+void Rincflo::init_flow_from_file ()
+{
+    auto& ld = *m_leveldata[0];
+
+    std::string File("in_vel.dat");
+    Vector<char> fileCharPtr;
+    ParallelDescriptor::ReadAndBcastFile(File, fileCharPtr);
+    std::string fileCharPtrString(fileCharPtr.dataPtr());
+    std::istringstream is(fileCharPtrString, std::istringstream::in);
+    std::string line, word;   
+
+    for(MFIter mfi(ld.velocity); mfi.isValid(); ++mfi) 
+    {
+        const Box& vbox = mfi.validbox();
+        Array4<Real>const& vel = ld.velocity.array(mfi);
+
+        const auto dlo = amrex::lbound(vbox);
+        const auto dhi = amrex::ubound(vbox);
+        #if (AMREX_IS_2D)
+        int k=0;
+        for(int i=dlo.x; i <= dhi.x ; i++) 
+        {
+        for(int j=dlo.y; j <= dhi.y ; j++) 
+        {
+            std::getline(is, line);
+            std::istringstream lis(line);
+            int l = 0;
+            while(lis >> word)
+                {vel(i,j,k,l++) = std::stod(word);}
+        }   // for / i
+        }   // for / j
+        #else
+        for(int i=dlo.x; i <= dhi.x ; i++) 
+        {
+        for(int j=dlo.y; j <= dhi.y ; j++) 
+        {
+        for(int k=dlo.z; k <= dhi.z ; k++) 
+        {
+            std::getline(is, line);
+            std::istringstream lis(line);
+            int l = 0;
+            while(lis >> word)
+                {vel(i,j,k,l++) = std::stod(word);}
+        }   // for / i
+        }   // for / j
+        }   // for / k
+        #endif
+    }   // for / mfi
+    
+    Print() << "Reading initial flow from file complete" << std::endl;
+}

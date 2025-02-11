@@ -1,0 +1,7 @@
+CEXE_headers += rincflo_derive_K.H
+CEXE_sources += rincflo_derive_util.cpp
+CEXE_sources += rincflo_derive_geometry.cpp
+CEXE_sources += rincflo_derive_flow.cpp
+CEXE_sources += rincflo_derive_react.cpp
+CEXE_sources += rincflo_react_summary.cpp
+CEXE_sources += rincflo_error.cpp

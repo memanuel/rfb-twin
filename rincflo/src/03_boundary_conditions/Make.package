@@ -1,0 +1,3 @@
+CEXE_sources += boundary_conditions.cpp
+CEXE_sources += rincflo_fillpatch.cpp rincflo_fillphysbc.cpp
+CEXE_sources += rincflo_set_velocity_bcs.cpp

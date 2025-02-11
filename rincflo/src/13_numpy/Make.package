@@ -1,0 +1,7 @@
+CEXE_sources += cnpy.cpp
+CEXE_sources += numpy_utils.cpp
+CEXE_sources += numpy_write.cpp
+CEXE_sources += numpy_write_geometry.cpp
+CEXE_sources += numpy_write_flow.cpp
+CEXE_sources += numpy_write_react.cpp
+CEXE_sources += numpy_read.cpp

@@ -1,0 +1,10 @@
+CEXE_headers += Convection.H
+CEXE_headers += Convection_conc_only.H
+
+CEXE_sources += incflo_compute_fluxes.cpp
+CEXE_sources += incflo_redistribute_convective_term.cpp
+CEXE_sources += incflo_compute_update.cpp
+CEXE_sources += incflo_debug_print.cpp
+CEXE_sources += rincflo_compute_MAC_projected_velocities.cpp
+CEXE_sources += rincflo_compute_advection_term.cpp
+CEXE_sources += rincflo_convection_conc_only.cpp

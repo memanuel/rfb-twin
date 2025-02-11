@@ -1,0 +1,17 @@
+CEXE_headers += rincflo_macros.H
+CEXE_headers += rincflo_includes.H
+CEXE_headers += rincflo_enums.H
+CEXE_headers += rincflo_levels.H
+CEXE_headers += rincflo_members.H
+CEXE_headers += rincflo_get.H
+CEXE_headers += rincflo_copy.H
+CEXE_headers += rincflo_status.H
+CEXE_headers += rincflo_virtual.H
+CEXE_headers += rincflo_initialize.H
+CEXE_headers += rincflo_flow.H
+CEXE_headers += rincflo_reaction.H
+CEXE_headers += rincflo_amrex.H
+CEXE_headers += rincflo_analysis.H
+CEXE_headers += rincflo_numpy.H
+CEXE_headers += rincflo_utilities.H
+CEXE_headers += rincflo_problem.H

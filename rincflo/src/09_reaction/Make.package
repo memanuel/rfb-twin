@@ -1,0 +1,17 @@
+CEXE_headers += ReactionScalarOp.H
+CEXE_headers += ReactionEsolidOp.H 
+CEXE_headers += ReactionEliquidOp.H
+CEXE_sources += rincflo_reaction.cpp
+CEXE_sources += rincflo_read_reaction_parameters.cpp
+CEXE_sources += rincflo_reaction_init.cpp
+CEXE_sources += rincflo_reaction_conc.cpp
+CEXE_sources += rincflo_reaction_source_terms.cpp
+CEXE_sources += rincflo_reaction_explicit.cpp
+CEXE_sources += rincflo_reaction_nernst.cpp
+CEXE_sources += rincflo_reaction_fix_pt.cpp
+CEXE_sources += rincflo_reaction_helpers.cpp
+CEXE_sources += rincflo_reaction_reach_steady.cpp
+CEXE_sources += ReactionScalarOp.cpp
+CEXE_sources += rincflo_reaction_epot.cpp
+CEXE_sources += ReactionEsolidOp.cpp 
+CEXE_sources += ReactionEliquidOp.cpp

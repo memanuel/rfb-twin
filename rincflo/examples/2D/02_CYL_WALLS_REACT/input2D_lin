@@ -1,0 +1,127 @@
+### SIMULATION DOMAIN ###
+
+geometry.prob_hi 	 =  100e-6 100e-6
+geometry.prob_lo         =  0.0 0.0  		# Lo corner coordinates
+geometry.is_periodic     =  0 0    		# Periodicity x y z (0/1)
+
+
+### GRID ###
+
+amr.n_cell 		= 128 128 
+
+amr.max_level           = 0
+amr.n_error_buf         = 1  # default is 1, buffer cells around tagged one
+amr.blocking_factor     = 2  # default is 8, (per level)
+amr.grid_eff            = 0.7 
+amr.max_grid_size_x     = 64
+amr.max_grid_size_y     = 64
+
+
+### BOUNDARY AND INITIAL CONDITIONS ###
+
+xlo.type        	= "mi"			
+xlo.velocity 		= 0.5e-2 0
+xlo.tracer              = 10.0
+
+xhi.type                = "po"
+xhi.pressure            = 0.0
+
+ylo.type                = "nsw"
+yhi.type                = "nsw"
+
+rincflo.probtype         =  0
+rincflo.ic_u 		 =  0.5e-2
+rincflo.ic_v             =  0.0
+rincflo.ic_p             =  0.0
+rincflo.ic_t             =  10.0
+
+
+### GEOMETRY ###
+
+rincflo.geometry         = "lattice"
+geo_eb.inputfilename     = "initlattice.rod"
+eb2.cover_multiple_cuts  = 1
+
+
+### FLUID ###
+
+rincflo.fluid_model      =   "newtonian" 	# Fluid model (rheology)
+rincflo.mu               =   0.001       	# Dynamic (or absolute) viscosity coefficient
+rincflo.ro_0             =   1000.0      	# Reference density 
+rincflo.gravity          =   0.  0. 	 	# Gravitational force
+
+
+### SPECIES ###
+
+rincflo.ntrac           =  1
+rincflo.D_s             =  4e-10
+rincflo.react_init_t    =  10.0
+rincflo.react_reinit_all_tracers = 1
+
+
+### REACTION ###
+
+rincflo.reaction_model	= linear
+rincflo.k_0 	    	= 1e-4
+
+
+### TIME-STEPPING (FLOW) ###
+
+max_step                =  2000
+amr.plot_int		=  20000 
+amr.check_int           =  20000 
+
+steady_state_tol 	=  1.0e-4
+tol_flow_relative 	=  1   	     # tol_flow_rate_comp / tol_flow_rate_mag / tol_flow_relative / tol_flow_relativerate
+												
+rincflo.cfl             	= 0.75        # CFL factor
+steady_state            	= 1           # Steady-state solver? 
+
+
+### SOLVERS INFO ###
+
+nodal_proj.bottom_solver 	= "hypre"
+nodal_proj.hypre.hypre_solver 	= "GMRES"
+nodal_proj.hypre.hypre_preconditioner = "BoomerAMG"
+nodal_proj.hypre.bamg_agg_num_levels = 2
+nodal_proj.hypre.bamg_num_sweeps = 1
+nodal_proj.hypre.bamg_relax_type = 3
+
+mac_proj.bottom_solver 		= "hypre"
+mac_proj.hypre.hypre_solver 	= "GMRES"
+mac_proj.hypre.hypre_preconditioner = "BoomerAMG"
+mac_proj.hypre.bamg_agg_num_levels = 2
+mac_proj.hypre.bamg_num_sweeps = 1
+mac_proj.hypre.bamg_relax_type = 3
+
+
+### SIMULATION OPTIONS ###
+
+do_flow 		= 1
+do_reaction	   	= 1
+amr.restart 		= ""
+rincflo.advect_tracer 	= 0  			## tracer advection during flow part
+rincflo.advection_type = MOL  			## MOL Godunov
+rincflo.redistribution_type = FluxRedist	## NoRedist FluxRedist MergeRedist StateRedist
+rincflo.do_initial_proj = 1
+rincflo.verbose         = 1         		## verbosity of rincflo itself
+
+
+### TIME-STEPPING (REACTION) ###
+
+rincflo.max_rsteps 			= 10000
+rincflo.react_check_int 		= 10001
+rincflo.react_plot_int			= 10001
+
+rincflo.tol_react_relativerate = 1
+rincflo.react_conc_tol	= 0.1
+
+rincflo.cfl_react      		  	= 0.75
+rincflo.react_automatic_fixed_dt 	= 1
+
+rincflo.react_timestepping_method	= 1
+rincflo.react_nonlin_method  	  	= 1
+rincflo.omega_loop		  	= 0
+rincflo.fixpoint_max_iter 		= 200
+rincflo.fixpoint_conc_tol 		= 1.0e-2
+

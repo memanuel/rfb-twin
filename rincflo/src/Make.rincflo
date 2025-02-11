@@ -1,0 +1,108 @@
+# *************************************************************************************************
+# MSE 2024-01-22 - Set C++ standard
+CXXSTD := c++23
+
+# MSE 2021-09-18 use XTRALIBS to add library dependencies specific to rincflo (not AMReX)
+# z library for compression / decompression; used by cnpy to read / write numpy arrays
+XTRALIBS += -lz
+
+# *************************************************************************************************
+# MSE 2022-01-03 special settings when building with CUDA support
+ifeq ($(USE_CUDA), TRUE)
+  CXXSTD := c++14
+  GPU_ERROR_CAPTURE_THIS := FALSE
+  GPU_WARN_CAPTURE_THIS := TRUE
+endif
+
+# *************************************************************************************************
+# MSE 2022-06-22 set macro HYPRE_SEQUENTIAL when building without MPI
+ifeq ($(USE_MPI), FALSE)
+  CPPFLAGS += -DHYPRE_SEQUENTIAL
+endif
+
+# *************************************************************************************************
+# MSE 2024-01-05 set macros for single vs. double precision
+ifeq ($(PRECISION), SINGLE)
+  CPPFLAGS += -DBL_USE_FLOAT
+endif
+
+# *************************************************************************************************
+# Amrex settings
+AMREX_XSDK = TRUE
+include $(AMREX_HOME)/Tools/GNUMake/Make.defs
+
+# These are the directories in rincflo/src
+Bdirs := src
+Bdirs += src/01_header
+Bdirs += src/02_setup
+Bdirs += src/03_boundary_conditions
+# Add directories for embedded boundaries if required
+ifeq ($(USE_EB), TRUE)
+  Bdirs += src/04_embedded_boundaries
+endif
+Bdirs += src/05_prob
+Bdirs += src/06_convection
+Bdirs += src/06_convection/01_Godunov
+Bdirs += src/06_convection/02_MOL
+# Convection methods for embedded boundaries
+ifeq ($(USE_EB), TRUE)
+  Bdirs += src/06_convection/03_EBGodunov
+  Bdirs += src/06_convection/04_Redistribution
+endif
+Bdirs += src/07_diffusion
+Bdirs += src/08_fluid_flow
+Bdirs += src/09_reaction
+Bdirs += src/10_derive
+Bdirs += src/11_utilities
+Bdirs += src/12_analysis
+Bdirs += src/13_numpy
+
+# Add suffix .EB to the executable name if using embedded boundaries
+ifeq ($(USE_EB), TRUE)
+  USERSuffix += .EB
+endif
+
+# Package the make packages and locations
+Bpack += $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
+Blocs += $(foreach dir, $(Bdirs), $(TOP)/$(dir))
+
+include $(Bpack)
+INCLUDE_LOCATIONS += $(Blocs)
+VPATH_LOCATIONS   += $(Blocs)
+
+# These are the directories in AMReX
+Pdirs := Base AmrCore Boundary LinearSolvers/MLMG LinearSolvers/Projections
+
+ifeq ($(USE_EB), TRUE)
+  Pdirs += EB
+endif
+
+ifeq ($(USE_PARTICLES), TRUE)
+  Pdirs += Particle
+endif
+
+Ppack += $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
+include $(Ppack)
+
+all: $(executable)
+	$(SILENT) $(RM) AMReX_buildInfo.cpp
+	@echo SUCCESS
+
+# job_info support
+CEXE_sources += AMReX_buildInfo.cpp
+CEXE_headers += $(AMREX_HOME)/Tools/C_scripts/AMReX_buildInfo.H
+INCLUDE_LOCATIONS +=  $(AMREX_HOME)/Tools/C_scripts
+
+AMReX_buildInfo.cpp:
+	$(AMREX_HOME)/Tools/C_scripts/makebuildinfo_C.py \
+          --amrex_home "$(AMREX_HOME)" \
+          --COMP "$(COMP)" --COMP_VERSION "$(COMP_VERSION)" \
+          --CXX_comp_name "$(CXX)" --CXX_flags "$(CXXFLAGS) $(CPPFLAGS) $(includes)" \
+          --F_comp_name "$(F90)" --F_flags "$(F90FLAGS)" \
+          --link_flags "$(LDFLAGS)" --libraries "$(libraries)" \
+          --GIT "$(TOP) $(AMREX_HOME)"
+
+include $(AMREX_HOME)/Tools/GNUMake/Make.rules
+
+clean::
+	$(SILENT) $(RM) AMReX_buildInfo.cpp

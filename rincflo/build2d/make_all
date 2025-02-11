@@ -1,0 +1,4 @@
+!/usr/bin/bash
+make -f MPI.mk -j `nproc`
+make -f DEBUG.MPI.mk -j `nproc`
+

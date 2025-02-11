@@ -1,0 +1,5 @@
+CEXE_sources += rincflo_build_info.cpp
+CEXE_sources += rincflo_get.cpp
+CEXE_sources += rincflo_copy.cpp
+CEXE_sources += io.cpp
+CEXE_sources += debug_print.cpp

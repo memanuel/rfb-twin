@@ -1,0 +1,87 @@
+### SIMULATION DOMAIN ###
+
+geometry.prob_hi 	 =  100e-6 100e-6
+geometry.prob_lo         =  0.0 0.0  		# Lo corner coordinates
+geometry.is_periodic     =  0 1    		# Periodicity x y z (0/1)
+
+
+### GRID ###
+
+amr.n_cell 		= 128 128 
+amr.max_level           = 0
+
+### BOUNDARY AND INITIAL CONDITIONS ###
+
+xlo.type        	= "mi"			
+xlo.velocity 		= 0.5e-2 0
+xlo.tracer              = 10.0
+
+xhi.type                = "po"
+xhi.pressure            = 0.0
+
+rincflo.ic_u 		 =  0.5e-2
+rincflo.ic_t             =  10.0
+
+
+### GEOMETRY ###
+
+rincflo.geometry         = "lattice"
+geo_eb.inputfilename     = "initlattice.rod"
+eb2.cover_multiple_cuts  = 1
+
+
+### SPECIES ###
+
+rincflo.ntrac           =  1
+rincflo.D_s             =  4e-10
+rincflo.react_init_t    =  10.0
+
+
+### REACTION ###
+
+rincflo.reaction_model	= linear
+rincflo.k_0 	    	= 7.2e-5
+
+
+### TIME-STEPPING (FLOW) ###
+
+rincflo.verbose         =  1         # rincflo itself
+max_step                =  2000
+amr.plot_int		=  10000 
+amr.check_int           =  10000 
+
+steady_state_tol 	=  1.0e-4
+
+									
+### SOLVERS INFO ###
+
+nodal_proj.bottom_solver 	= "hypre"
+nodal_proj.hypre.hypre_solver 	= "GMRES"
+nodal_proj.hypre.hypre_preconditioner = "BoomerAMG"
+nodal_proj.hypre.bamg_agg_num_levels = 2
+nodal_proj.hypre.bamg_num_sweeps = 1
+nodal_proj.hypre.bamg_relax_type = 3
+
+mac_proj.bottom_solver 		= "hypre"
+mac_proj.hypre.hypre_solver 	= "GMRES"
+mac_proj.hypre.hypre_preconditioner = "BoomerAMG"
+mac_proj.hypre.bamg_agg_num_levels = 2
+mac_proj.hypre.bamg_num_sweeps = 1
+mac_proj.hypre.bamg_relax_type = 3
+
+
+### SIMULATION OPTIONS ###
+
+do_flow 		= 1
+rincflo.do_reaction   	= 1
+
+
+### TIME-STEPPING (REACTION) ###
+
+rincflo.max_rsteps 			= 10000
+rincflo.react_check_int 		= 10001
+rincflo.react_plot_int			= 10001
+
+rincflo.react_conc_tol	= 0.1
+
+

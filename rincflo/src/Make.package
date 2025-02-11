@@ -1,0 +1,2 @@
+CEXE_sources += rincflo.cpp
+CEXE_sources += main.cpp

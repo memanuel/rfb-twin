@@ -1,0 +1,67 @@
+(double-check in the sourcecode if this is still updated)
+
+pi  = pressure_inflow 
+po  = pressure_outflow
+mi  = mass_inflow
+nsw = no_slip_wall
+sw  = slip_wall
+cwp = charging_wall_pot
+cwc = charging_wall_cur
+mwp = mixcharging_wall_pot
+
+* fillpatch  (boundary_conditions.cpp)
+
+|        | pi       | po       | mi       | nsw         | sw          | cwp         | cwc         | mwp         | 
+|--------+----------+----------+----------+-------------+-------------+-------------+-------------+-------------|
+| v_n    | foextrap | foextrap | ext_dir  | ext_dir (0) | ext_dir (0) | ext_dir (0) | ext_dir (0) | ext_dir (0) |
+| v_t    | foextrap | foextrap | ext_dir  | ext_dir (0) | hoextrap    | ext_dir (0) | ext_dir (0) | ext_dir (0) |
+
+| scalar | ext_dir  | ext_dir  | ext_dir  | foextrap    | foextrap    | foextrap    | foextrap    | foextrap    |
+| epotL  | foextrap | foextrap | foextrap | foextrap    | foextrap    | ext_dir     | ext_dir     | foextrap    |
+| epotS  | foextrap | foextrap | foextrap | foextrap    | foextrap    | ext_dir     | ext_dir     | ext_dir     |
+
+| rho    | foextrap | foextrap | ext_dir  | foextrap    | foextrap    | foextrap    | foextrap    | foextrap    |
+| force  | foextrap | foextrap | foextrap | foextrap    | foextrap    | foextrap    | foextrap    | foextrap    |
+
+* projection
+
+| pi        | po        | mi      | nsw     | sw      | cwp     | cwc     | mwp     |
+|-----------+-----------+---------+---------+---------+---------+---------+---------|
+| Dirichlet | Dirichlet | Neumann | Neumann | Neumann | Neumann | Neumann | Neumann |
+
+* tensor solve 
+
+|        | pi      | po      | mi        | nsw           | sw            | cwp           | cwc           | mwp           |
+|--------+---------+---------+-----------+---------------+---------------+---------------+---------------+---------------|
+| normal | Neumann | Neumann | Dirichlet | Dirichlet (0) | Dirichlet (0) | Dirichlet (0) | Dirichlet (0) | Dirichlet (0) |
+| tang   | Neumann | Neumann | Dirichlet | Dirichlet (0) | Neumann (0)   | Dirichlet (0) | Dirichlet (0) | Dirichlet (0) |
+
+* scalar diffusion  (for diffusing velocity component-by-component the same as tensor solve...)
+
+| pi        | po      | mi        | nsw     | sw      | cwp     | cwc     | mwp     |
+|-----------+---------+-----------+---------+---------+---------+---------+---------|
+| Dirichlet | Neumann | Dirichlet | Neumann | Neumann | Neumann | Neumann | Neumann |
+| Dirichlet | Neumann | Dirichlet | Neumann | Neumann | Neumann | Neumann | Neumann |
+
+* scalar reaction
+
+| pi        | po      | mi        | nsw     | sw      | cwp     | cwc     | mwp     |
+|-----------+---------+-----------+---------+---------+---------+---------+---------|
+| Dirichlet | Neumann | Dirichlet | Neumann | Neumann | Neumann | Neumann | Neumann |
+| Dirichlet | Neumann | Dirichlet | Neumann | Neumann | Neumann | Neumann | Neumann |
+
+* epotL reaction
+
+| pi      | po      | mi        | nsw     | sw      | cwp       | cwc     | mwp       |
+|---------+---------+-----------+---------+---------+-----------+---------+-----------|
+| Neumann | Neumann | Neumann   | Neumann | Neumann | Dirichlet | InNeumm | Neumann   |
+
+
+* epotS reaction
+
+| pi      | po      | mi        | nsw     | sw      | cwp       | cwc     | mwp       |
+|---------+---------+-----------+---------+---------+-----------+---------+-----------|
+| Neumann | Neumann | Neumann   | Neumann | Neumann | Dirichlet | InNeumm | Dirichlet |
+
+
+

@@ -1,0 +1,2 @@
+CEXE_sources += analysis.cpp
+CEXE_sources += diagnostics.cpp
