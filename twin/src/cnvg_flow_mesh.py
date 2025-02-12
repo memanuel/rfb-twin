@@ -332,6 +332,9 @@ def main():
     # Verbosity flag
     verbose: bool = True
     
+    # Create output directory if it does not exist
+    plot_dir.mkdir(parents=True, exist_ok=True)
+
     # Iterate over geometries
     G: int
     for G in Gs:
