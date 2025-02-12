@@ -1,0 +1,139 @@
+// *********************************************************************************************************************
+// Prefix block of the inputs file
+// *********************************************************************************************************************
+###*********************************************************************************************************************
+### Simulation Type     : SIM_TYPE
+### Model Type          : MODEL_TYPE
+### Flow Rate           : FLOW_RATE_MLHR ml/hr
+### AQDS Concentration  : C_AQDS millimolar
+### [A] (AQDS    / Ox ) : C_A millimolar
+### [B] (H2-AQDS / Red) :  C_B millimolar
+### [B] << [A] (SOC is about 1.73E-7 at nominal voltage of 200 mV vs. 50% SOC AQDS/H2AQDS)
+#if defined(IS_ECHEM)
+### Applied Voltage     : VOLTAGE_MV mv
+#endif
+### Simulation Stage    : STAGE
+
+// *********************************************************************************************************************
+// Load gpp utilities and physics constants
+// *********************************************************************************************************************
+#include "gpp_utils.gpp"
+#include "physics_constants.gpp"
+// *********************************************************************************************************************
+// Dimensionality and type of simulation to run
+// *********************************************************************************************************************
+// #define IS_2D
+#define IS_3D
+// Is this a reaction?
+#define IS_REACTION (defined(IS_NERNST) || defined(IS_SPECIAL) || defined(IS_BV))
+// Is this an electrochemical reaction?
+#define IS_ECHEM (defined(IS_NERNST) || defined(IS_SPECIAL) || defined(IS_BV))
+// *********************************************************************************************************************
+// Initial conditions
+// *********************************************************************************************************************
+// #define IS_MASS_INFLOW
+// #define FLOW_RATE FLOW_RATE_MS
+// #define UX0 FLOW_RATE_MS
+#define IS_PRESSURE_INFLOW
+#define C_H2SO4 1000.0
+// *********************************************************************************************************************
+// Grid setup
+// *********************************************************************************************************************
+// Initial grid sizes (GRID_X, GRID_Y) are set on the command line
+// Number of grid levels GRID_LEVELS and AMR blocking factor AMR_BLOCK_FACTOR set on the command line
+// Default settings:
+// GRID_LEVELS = 2
+// AMR_BLOCK_FACTOR = 16
+#define MAX_GRID_LEVEL CALC(GRID_LEVELS-1)
+#define AMR_GRID_EFFICIENCY 0.8
+// Maximum allowed grid size; default 32 in 3D, 128 in 2D
+#if defined(IS_2D)
+#define MAX_GRID_SIZE 256
+#elif defined(IS_3D)
+#define MAX_GRID_SIZE 128
+#endif
+// Number of cells to grow boxes; default is 4
+#ifndef AMR_NGROW
+#define AMR_NGROW 4
+#endif
+// How to build coarse levels for MLMG solver
+#ifndef AMR_BUILD_COARSE_BY_COARSENING
+#define AMR_BUILD_COARSE_BY_COARSENING 0
+#endif
+#ifndef EB2_GEO_REQUIRED_COARSENING
+#define EB2_GEO_REQUIRED_COARSENING 2
+#endif
+#ifndef EB2_GEO_MAX_COARSENING
+#define EB2_GEO_MAX_COARSENING 8
+#endif
+// *********************************************************************************************************************
+// Applied voltage
+// *********************************************************************************************************************
+#define DELTA_V VOLTAGE
+#define DO_ELECTROMIGRATION 0
+// *********************************************************************************************************************
+// Flow Simulation: Step Size, Convergence criteria
+// *********************************************************************************************************************
+// FLOW_MAX_STEP, FLOW_CFL, FLOW_INT set by calling program
+// Set default FLOW_TOL if not set by calling program
+#ifndef FLOW_TOL
+#define FLOW_TOL 1.0E-6
+#endif
+// *********************************************************************************************************************
+// Reaction Simulation: Step Size, Convergence criteria
+// *********************************************************************************************************************
+// Is the model either Nernst or Special?
+#define IS_NERNST_OR_SPECIAL (defined(IS_NERNST) || defined(IS_SPECIAL))
+// Maximum overpotential in volts for source term; default 100 millivolts
+#ifndef OVERPOT_MAX
+#define OVERPOT_MAX 0.100
+#endif
+// MAX_CONSUMPTION and DR_INTERVAL set by calling program
+// REACT_MAX_STEP, STATUS_INT, REACT_INT and REACT_CFL are all set by calling program
+#define REACT_TOL_TYPE rincflo.tol_type_soc
+// Tolerance on SOC change at the outer loop, usually set by calling program
+#ifndef REACT_TOL_SOC
+#define REACT_TOL_SOC 1.0E-6
+#endif
+// Tolerance for electric potential change in Butler-Volmer model
+#define REACT_TOL_EPOT 0.050
+// Configuration for fixed point iterations- max steps and tolerance
+// Default MAX_STEP=200, CONC_TOL=1.0E-12, EPOT_TOL=1.0E-12
+#ifndef FIXPT_MAX_STEP
+#define FIXPT_MAX_STEP 200
+#endif
+#ifndef FIXPT_CONC_TOL
+#define FIXPT_CONC_TOL 1.0E-12
+#endif
+#ifndef FIXPT_EPOT_TOL
+#define FIXPT_EPOT_TOL 1.0E-12
+#endif
+// Nonlinear solver types: 0 linear, 1 picard, 2 newton
+#define REACT_NONLINEAR_METHOD 1
+// Reaction time stepping types: 
+// 0: explicit
+// 1: A-D(E)R
+// 2: A/2-D(E)R+A/2
+// 3: Predictor/Corrector
+#define REACT_TIMESTEP_METHOD_SPECIAL 1
+#define REACT_TIMESTEP_METHOD_BV 1
+// *********************************************************************************************************************
+// Solver tweaks
+// *********************************************************************************************************************
+#define MG_RTOL 1.52587890625E-05
+#define MG_BOTTTOM_RTOL 1.52587890625E-05
+#define MG_MAXITER 1024
+#define MG_BOTTOM_MAXITER 1024
+#define MG_VERBOSE 0
+#define MG_BOTTOM_VERBOSE 0
+#define HYPRE_SOLVER "GMRES"
+#define HYPRE_NUM_KRYLOV 256
+#define HYPRE_MAX_ITER 256
+#define HYPRE_RTOL 2.32830643653869625E-10
+#define HYPRE_MAX_LEVELS 64
+#define HYPRE_AGG_NUM_LEVELS 4
+#define HYPRE_NUM_SWEEPS 2
+#define HYPRE_RELAX_TYPE 19
+#define HYPRE_RELAX_ORDER 0
+#define HYPRE_COARSEN_TYPE 10
+#define HYPRE_INTERP_TYPE 4

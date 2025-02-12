@@ -1,0 +1,11 @@
+python src/nernst.py -P 100000 -V 0   -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp000_s01.txt
+python src/nernst.py -P 100000 -V 10  -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp010_s01.txt
+python src/nernst.py -P 100000 -V 20  -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp020_s01.txt
+python src/nernst.py -P 100000 -V 30  -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp030_s01.txt
+python src/nernst.py -P 100000 -V 40  -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp040_s01.txt
+python src/nernst.py -P 100000 -V 50  -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp050_s01.txt
+python src/nernst.py -P 100000 -V 60  -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp060_s01.txt
+python src/nernst.py -P 100000 -V 80  -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp080_s01.txt
+python src/nernst.py -P 100000 -V 100 -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp100_s01.txt
+python src/nernst.py -P 100000 -V 120 -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp120_s01.txt
+python src/nernst.py -P 100000 -V 150 -S 1 -M 50000 | tee npy/nernst/cnvg/output_P1E5_Vp150_s01.txt

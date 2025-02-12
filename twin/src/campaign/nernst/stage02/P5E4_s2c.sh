@@ -1,0 +1,10 @@
+python src/nernst.py -P 50000 -V  -10 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm010_s02c.txt &
+python src/nernst.py -P 50000 -V  -20 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm020_s02c.txt &
+python src/nernst.py -P 50000 -V  -30 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm030_s02c.txt &
+python src/nernst.py -P 50000 -V  -40 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm040_s02c.txt &
+python src/nernst.py -P 50000 -V  -50 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm050_s02c.txt &
+python src/nernst.py -P 50000 -V  -60 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm060_s02c.txt &
+python src/nernst.py -P 50000 -V  -70 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm070_s02c.txt &
+python src/nernst.py -P 50000 -V  -80 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm080_s02c.txt &
+python src/nernst.py -P 50000 -V  -90 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm090_s02c.txt &
+python src/nernst.py -P 50000 -V -100 -S 2 -M 100000 > npy/03_nernst/cnvg/output_P5E4_Vm100_s02c.txt &

@@ -1,0 +1,23 @@
+// *********************************************************************************************************************
+// Fluid dynamics of water
+// *********************************************************************************************************************
+// Dynamic Viscosity mu of water at 25 C
+// https://www.engineeringtoolbox.com/water-dynamic-kinematic-viscosity-d_596.html
+#define MU 0.0008891
+// Density of water at 25 C
+// https://antoine.frostburg.edu/chem/senese/javascript/water-density.html
+#define RHO 997.0479
+// *********************************************************************************************************************
+// Diffusivity of species
+// *********************************************************************************************************************
+// These are now defined by the caller so they can incorporate the diffusion factor
+#define D_AQDS 4.0E-10
+#define D_H 9.3E-9
+#define D_HSO4 1.38E-9
+// *********************************************************************************************************************
+// Reaction constants
+// *********************************************************************************************************************
+#define K_LINEAR 5.0E-5
+#define K_NERNST 7.2E-5
+#define K_SPECIAL 7.2E-5
+#define K_BV 7.2E-5

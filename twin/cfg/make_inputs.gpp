@@ -1,0 +1,15 @@
+// Load the setup configuration file with macro definitions
+#include "00_setup.gpp"
+// Load each component of the input configuration file
+#include "01_domain.cfg"
+#include "02_boundary_initial_cond.cfg"
+#include "03_grid.cfg"
+#include "04_geometry.cfg"
+#include "05_fluid.cfg"
+#include "06_species.cfg"
+#include "07_reaction.cfg"
+#include "08_sim_opt.cfg"
+#include "09_flow_step.cfg"
+#include "10_fluid_opt.cfg"
+#include "11_react_step.cfg"
+#include "12_linear_solver.cfg"
