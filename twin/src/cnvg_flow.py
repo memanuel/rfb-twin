@@ -283,7 +283,8 @@ def plot_vel_error(nzs: list[int], err: NumpyFloatArray, nz_ref: int, G: int, le
 
     # Save the figure
     # fname: str = (plot_dir / f'{plot_num:02d}_flow_cnvg_{cnvg_type_name.lower():s}_L{level:0d}.png').as_posix()
-    fname: str = (plot_dir / f'{plot_num:02d}_flow_cnvg_L{level:0d}.png').as_posix()
+    fpath: Path = (plot_dir / f'{plot_num:02d}_flow_cnvg_L{level:0d}.png')
+    fname: str = fpath.as_posix()
     fig.savefig(fname)
 
     # Status message
@@ -382,8 +383,9 @@ def plot_vel_errors(nzs3: list[list[int]], errs3: list[NumpyFloatArray],
 
     # Save the figure
     fname: str = f'flow_cnvg.png' if fig_style else f'flow_cnvg_L{level:0d}.png'
-    path: Path = (plot_dir / fname).as_posix()
-    fig.savefig(path, bbox_inches='tight')
+    path: Path = (plot_dir / fname)
+    fname = path.as_posix()
+    fig.savefig(fname, bbox_inches='tight')
 
 # *************************************************************************************************
 def main():
@@ -398,6 +400,9 @@ def main():
     cnvg_type: FlowConvergenceType = FlowConvergenceType.Fixed
     use_fine: bool = False
     verbose: bool = True
+
+    # Create output directory if it does not exist
+    plot_dir.mkdir(parents=True, exist_ok=True)
 
     # Geometries to process
     Gs: list[int] = []

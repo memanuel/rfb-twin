@@ -1,3 +1,6 @@
+*.zst
+02_cnvg_tfix
 npy
-temp
-finite-difference
+test
+
+
